@@ -1,0 +1,696 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); background: transparent; }
+  .app { padding: 1rem 0; min-height: 600px; }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .card {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 1.25rem;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+  }
+
+  .user-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+  }
+
+  .user-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 8px;
+    border: 1.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    background: var(--color-background-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .user-btn:hover { border-color: var(--color-border-primary); background: var(--color-background-primary); }
+  .user-btn.selected { border-color: #534AB7; background: #EEEDFE; }
+  .user-btn.selected .avatar { background: #534AB7; color: #fff; }
+  .user-btn.selected .user-name { color: #3C3489; }
+
+  .avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 500;
+    background: var(--color-background-info);
+    color: var(--color-text-info);
+  }
+  .user-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+  .user-pts { font-size: 12px; color: var(--color-text-secondary); }
+
+  .mode-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .mode-btn {
+    padding: 14px 8px;
+    border: 1.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    background: var(--color-background-secondary);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .mode-btn:hover { border-color: var(--color-border-primary); }
+  .mode-btn.selected { border-color: #0F6E56; background: #E1F5EE; }
+  .mode-btn .mode-name { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+  .mode-btn .mode-desc { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+  .mode-btn.selected .mode-name { color: #085041; }
+
+  .btn-primary {
+    width: 100%; padding: 12px;
+    background: #534AB7; color: #fff;
+    border: none; border-radius: var(--border-radius-md);
+    font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .btn-primary:hover { background: #3C3489; }
+  .btn-primary:disabled { background: var(--color-background-secondary); color: var(--color-text-secondary); cursor: not-allowed; }
+
+  .btn-secondary {
+    padding: 10px 16px;
+    background: transparent;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    font-size: 13px; font-weight: 500;
+    cursor: pointer; color: var(--color-text-primary);
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { background: var(--color-background-secondary); }
+
+  .room-list { display: flex; flex-direction: column; gap: 8px; }
+  .room-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px;
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    background: var(--color-background-secondary);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .room-item:hover { border-color: var(--color-border-primary); background: var(--color-background-primary); }
+  .room-item .room-info { flex: 1; }
+  .room-item .room-name { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+  .room-item .room-meta { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+  .badge {
+    font-size: 11px; font-weight: 500; padding: 3px 8px;
+    border-radius: var(--border-radius-md);
+  }
+  .badge-green { background: #E1F5EE; color: #0F6E56; }
+  .badge-amber { background: #FAEEDA; color: #854F0B; }
+  .badge-gray { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); color: var(--color-text-secondary); }
+
+  .timer-display {
+    text-align: center; padding: 2rem 0 1.5rem;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    margin-bottom: 1.25rem;
+  }
+  .timer-phase {
+    font-size: 11px; font-weight: 500; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--color-text-secondary);
+    margin-bottom: 8px;
+  }
+  .timer-clock {
+    font-size: 64px; font-weight: 500; letter-spacing: -2px;
+    color: var(--color-text-primary); line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .timer-clock.break { color: #0F6E56; }
+  .timer-clock.penalty { color: #993C1D; }
+
+  .progress-bar-wrap {
+    height: 4px; background: var(--color-background-secondary);
+    border-radius: 2px; overflow: hidden; margin-bottom: 1.25rem;
+  }
+  .progress-bar {
+    height: 100%; background: #534AB7;
+    border-radius: 2px; transition: width 1s linear;
+  }
+  .progress-bar.break { background: #1D9E75; }
+
+  .participants {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin-bottom: 1.25rem;
+  }
+  .participant-card {
+    padding: 12px; border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    background: var(--color-background-secondary);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .participant-card .p-info { flex: 1; min-width: 0; }
+  .participant-card .p-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+  .participant-card .p-pts { font-size: 20px; font-weight: 500; color: #534AB7; line-height: 1.2; }
+  .participant-card .p-delta { font-size: 11px; margin-top: 2px; }
+  .participant-card .p-delta.pos { color: #0F6E56; }
+  .participant-card .p-delta.neg { color: #993C1D; }
+
+  .timer-actions { display: flex; gap: 8px; }
+  .btn-start {
+    flex: 1; padding: 14px;
+    background: #1D9E75; color: #fff;
+    border: none; border-radius: var(--border-radius-md);
+    font-size: 15px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .btn-start:hover { background: #0F6E56; }
+  .btn-resume {
+    flex: 1; padding: 14px;
+    background: #534AB7; color: #fff;
+    border: none; border-radius: var(--border-radius-md);
+    font-size: 15px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+    animation: pulse 1s infinite;
+  }
+  .btn-resume:hover { background: #3C3489; animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.75} }
+
+  .penalty-notice {
+    text-align: center; padding: 8px 12px;
+    background: #FAECE7; border-radius: var(--border-radius-md);
+    font-size: 13px; color: #993C1D; margin-bottom: 8px;
+    display: none;
+  }
+  .penalty-notice.show { display: block; }
+
+  .alarm-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100;
+  }
+  .alarm-overlay.show { display: flex; }
+  .alarm-box {
+    background: var(--color-background-primary);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem; text-align: center; max-width: 320px; width: 90%;
+    border: 0.5px solid var(--color-border-tertiary);
+  }
+  .alarm-icon { font-size: 36px; color: #0F6E56; margin-bottom: 12px; }
+  .alarm-title { font-size: 20px; font-weight: 500; margin-bottom: 6px; color: var(--color-text-primary); }
+  .alarm-sub { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 1.5rem; }
+
+  .leaderboard { display: flex; flex-direction: column; gap: 8px; }
+  .lb-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    background: var(--color-background-secondary);
+  }
+  .lb-row.me { background: #EEEDFE; border-color: #AFA9EC; }
+  .lb-rank { font-size: 15px; font-weight: 500; width: 20px; text-align: center; color: var(--color-text-secondary); }
+  .lb-name { flex: 1; font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+  .lb-pts { font-size: 16px; font-weight: 500; color: #534AB7; }
+
+  .header-bar {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;
+  }
+  .header-bar .back-btn {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 13px; color: var(--color-text-secondary);
+    cursor: pointer; padding: 4px 0;
+    background: none; border: none;
+  }
+  .header-bar .back-btn:hover { color: var(--color-text-primary); }
+  .header-bar h2 { font-size: 18px; font-weight: 500; color: var(--color-text-primary); }
+
+  .step-indicator {
+    display: flex; gap: 6px; margin-bottom: 1.5rem;
+  }
+  .step-dot {
+    height: 3px; border-radius: 2px; flex: 1;
+    background: var(--color-background-secondary);
+    transition: background 0.3s;
+  }
+  .step-dot.done { background: #534AB7; }
+  .step-dot.active { background: #AFA9EC; }
+</style>
+
+<div class="app">
+<h2 class="sr-only">Aplicación de estudio gamificado con temporizador pomodoro y puntos por sesión</h2>
+
+<div id="screen-select" class="screen active">
+  <div class="step-indicator">
+    <div class="step-dot active" id="s1"></div>
+    <div class="step-dot" id="s2"></div>
+    <div class="step-dot" id="s3"></div>
+  </div>
+  <p class="section-title">¿Quién estudia hoy?</p>
+  <div class="user-grid" id="user-grid"></div>
+  <div style="margin-top: 1rem;">
+    <button class="btn-primary" id="btn-to-mode" disabled>Continuar</button>
+  </div>
+</div>
+
+<div id="screen-mode" class="screen">
+  <div class="step-indicator">
+    <div class="step-dot done"></div>
+    <div class="step-dot active"></div>
+    <div class="step-dot"></div>
+  </div>
+  <p class="section-title">Método de estudio</p>
+  <div class="mode-grid">
+    <div class="mode-btn" data-work="25" data-break="5">
+      <div class="mode-name">Pomodoro</div>
+      <div class="mode-desc">25 min trabajo<br>5 min descanso</div>
+    </div>
+    <div class="mode-btn" data-work="50" data-break="10">
+      <div class="mode-name">Largo</div>
+      <div class="mode-desc">50 min trabajo<br>10 min descanso</div>
+    </div>
+    <div class="mode-btn" data-work="90" data-break="20">
+      <div class="mode-name">Ultradian</div>
+      <div class="mode-desc">90 min trabajo<br>20 min descanso</div>
+    </div>
+  </div>
+  <div style="margin-top: 1rem; display: flex; gap: 8px;">
+    <button class="btn-secondary" onclick="goScreen('select')">Volver</button>
+    <button class="btn-primary" id="btn-to-room" disabled style="flex:1">Continuar</button>
+  </div>
+</div>
+
+<div id="screen-room" class="screen">
+  <div class="step-indicator">
+    <div class="step-dot done"></div>
+    <div class="step-dot done"></div>
+    <div class="step-dot active"></div>
+  </div>
+  <p class="section-title">Salas activas</p>
+  <div id="room-list" class="room-list"></div>
+  <div style="margin-top: 10px; display: flex; gap: 8px;">
+    <button class="btn-secondary" onclick="goScreen('mode')">Volver</button>
+    <button class="btn-primary" onclick="createRoom()" style="flex:1"><i class="ti ti-plus" aria-hidden="true"></i> Nueva sala</button>
+  </div>
+</div>
+
+<div id="screen-timer" class="screen">
+  <div class="header-bar">
+    <button class="back-btn" onclick="leaveRoom()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Salir</button>
+    <h2 id="timer-room-name" style="flex:1">Sala</h2>
+    <button class="btn-secondary" style="font-size:12px; padding:6px 10px" onclick="goScreen('leaderboard')"><i class="ti ti-trophy" aria-hidden="true"></i> Ranking</button>
+  </div>
+
+  <div class="card" style="padding: 1.5rem;">
+    <div class="timer-display">
+      <div class="timer-phase" id="timer-phase">Trabajo</div>
+      <div class="timer-clock" id="timer-clock">25:00</div>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="timer-progress" style="width:100%"></div></div>
+    <div class="participants" id="participants-display"></div>
+    <div class="penalty-notice" id="penalty-notice"></div>
+    <div class="timer-actions">
+      <button class="btn-start" id="btn-start-work" onclick="startWork()"><i class="ti ti-player-play" aria-hidden="true"></i> Iniciar trabajo</button>
+    </div>
+  </div>
+</div>
+
+<div id="screen-leaderboard" class="screen">
+  <div class="header-bar">
+    <button class="back-btn" onclick="goScreen('timer')"><i class="ti ti-arrow-left" aria-hidden="true"></i> Volver al timer</button>
+    <h2>Ranking global</h2>
+  </div>
+  <div class="leaderboard" id="leaderboard-list"></div>
+</div>
+
+<div class="alarm-overlay" id="alarm-overlay">
+  <div class="alarm-box">
+    <div class="alarm-icon"><i class="ti ti-bell" aria-hidden="true"></i></div>
+    <div class="alarm-title" id="alarm-title">¡Tiempo de trabajo!</div>
+    <div class="alarm-sub" id="alarm-sub">Descansa, te lo mereces.</div>
+    <button class="btn-start" id="alarm-btn" onclick="dismissAlarm()" style="width:100%">Entendido</button>
+  </div>
+</div>
+</div>
+
+<script>
+const USERS = [
+  { id: 'u1', name: 'Tú', initials: 'TÚ', color: '#534AB7', bg: '#EEEDFE' },
+  { id: 'u2', name: 'Ana', initials: 'AN', color: '#0F6E56', bg: '#E1F5EE' },
+  { id: 'u3', name: 'Marcos', initials: 'MA', color: '#D85A30', bg: '#FAECE7' },
+  { id: 'u4', name: 'Laura', initials: 'LA', color: '#185FA5', bg: '#E6F1FB' },
+];
+
+let state = {
+  userId: null,
+  workMin: 25,
+  breakMin: 5,
+  roomId: null,
+  roomName: null,
+};
+
+let timerInterval = null;
+let penaltyInterval = null;
+let syncInterval = null;
+let alarmAudio = null;
+
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const times = [0, 0.4, 0.8];
+    times.forEach(t => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = 880;
+      o.type = 'sine';
+      g.gain.setValueAtTime(0.4, ctx.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.3);
+      o.start(ctx.currentTime + t);
+      o.stop(ctx.currentTime + t + 0.35);
+    });
+  } catch(e) {}
+}
+
+async function loadStorage() {
+  try {
+    const r = await window.storage.get('studyapp-data', true);
+    return r ? JSON.parse(r.value) : { points: {}, rooms: [] };
+  } catch(e) { return { points: {}, rooms: [] }; }
+}
+
+async function saveStorage(data) {
+  try {
+    await window.storage.set('studyapp-data', JSON.stringify(data), true);
+  } catch(e) {}
+}
+
+async function getPoints() {
+  const d = await loadStorage();
+  return d.points || {};
+}
+
+async function addPoints(userId, delta) {
+  const d = await loadStorage();
+  if (!d.points) d.points = {};
+  d.points[userId] = Math.max(0, (d.points[userId] || 0) + delta);
+  await saveStorage(d);
+  return d.points[userId];
+}
+
+async function getRooms() {
+  const d = await loadStorage();
+  const rooms = d.rooms || [];
+  const now = Date.now();
+  return rooms.filter(r => now - r.created < 4 * 60 * 60 * 1000);
+}
+
+async function saveRooms(rooms) {
+  const d = await loadStorage();
+  d.rooms = rooms;
+  await saveStorage(d);
+}
+
+async function getRoomState(roomId) {
+  try {
+    const r = await window.storage.get('room-' + roomId, true);
+    return r ? JSON.parse(r.value) : null;
+  } catch(e) { return null; }
+}
+
+async function setRoomState(roomId, rs) {
+  try {
+    await window.storage.set('room-' + roomId, JSON.stringify(rs), true);
+  } catch(e) {}
+}
+
+function goScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  if (name === 'room') renderRooms();
+  if (name === 'leaderboard') renderLeaderboard();
+}
+
+async function renderUsers() {
+  const pts = await getPoints();
+  const grid = document.getElementById('user-grid');
+  grid.innerHTML = USERS.map(u => `
+    <div class="user-btn" data-id="${u.id}" onclick="selectUser('${u.id}')">
+      <div class="avatar" style="background:${u.bg};color:${u.color}">${u.initials}</div>
+      <div class="user-name">${u.name}</div>
+      <div class="user-pts">${pts[u.id] || 0} pts</div>
+    </div>`).join('');
+}
+
+function selectUser(id) {
+  state.userId = id;
+  document.querySelectorAll('.user-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.id === id);
+  });
+  document.getElementById('btn-to-mode').disabled = false;
+}
+
+document.getElementById('btn-to-mode').onclick = () => goScreen('mode');
+
+document.querySelectorAll('.mode-btn').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.mode-btn').forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected');
+    state.workMin = parseInt(b.dataset.work);
+    state.breakMin = parseInt(b.dataset.break);
+    document.getElementById('btn-to-room').disabled = false;
+  };
+});
+
+document.getElementById('btn-to-room').onclick = () => goScreen('room');
+
+async function renderRooms() {
+  const rooms = await getRooms();
+  const list = document.getElementById('room-list');
+  if (rooms.length === 0) {
+    list.innerHTML = '<p style="font-size:14px;color:var(--color-text-secondary);padding:1rem 0;text-align:center">No hay salas activas. ¡Crea la primera!</p>';
+    return;
+  }
+  list.innerHTML = rooms.map(r => {
+    const users = r.users || [];
+    const u = USERS.find(x => x.id === r.ownerId);
+    const phase = r.phase === 'work' ? 'Trabajando' : r.phase === 'break' ? 'Descansando' : 'Esperando';
+    const badge = r.phase === 'work' ? 'badge-green' : r.phase === 'break' ? 'badge-amber' : 'badge-gray';
+    return `<div class="room-item" onclick="joinRoom('${r.id}')">
+      <div class="room-info">
+        <div class="room-name">${r.name}</div>
+        <div class="room-meta">${u ? u.name : '?'} · ${users.length} participante${users.length !== 1 ? 's' : ''} · ${r.workMin}/${r.breakMin} min</div>
+      </div>
+      <span class="badge ${badge}">${phase}</span>
+    </div>`;
+  }).join('');
+}
+
+async function createRoom() {
+  const rooms = await getRooms();
+  const u = USERS.find(x => x.id === state.userId);
+  const id = 'r' + Date.now();
+  const name = 'Sala de ' + u.name;
+  const rs = {
+    id, name,
+    ownerId: state.userId,
+    users: [state.userId],
+    workMin: state.workMin,
+    breakMin: state.breakMin,
+    phase: 'idle',
+    phaseEnd: null,
+    created: Date.now(),
+  };
+  rooms.push(rs);
+  await saveRooms(rooms);
+  await setRoomState(id, rs);
+  state.roomId = id;
+  state.roomName = name;
+  enterTimer(rs);
+}
+
+async function joinRoom(roomId) {
+  const rs = await getRoomState(roomId);
+  if (!rs) return;
+  if (!rs.users.includes(state.userId)) rs.users.push(state.userId);
+  await setRoomState(roomId, rs);
+  state.roomId = roomId;
+  state.roomName = rs.name;
+  state.workMin = rs.workMin;
+  state.breakMin = rs.breakMin;
+  enterTimer(rs);
+}
+
+async function leaveRoom() {
+  clearInterval(timerInterval);
+  clearInterval(penaltyInterval);
+  clearInterval(syncInterval);
+  timerInterval = penaltyInterval = syncInterval = null;
+  state.roomId = null;
+  goScreen('select');
+  renderUsers();
+}
+
+function enterTimer(rs) {
+  goScreen('timer');
+  document.getElementById('timer-room-name').textContent = rs.name;
+  clearInterval(syncInterval);
+  syncInterval = setInterval(syncTimer, 1000);
+  syncTimer();
+}
+
+let localPenaltyStart = null;
+let localPenaltySecs = 0;
+
+async function syncTimer() {
+  if (!state.roomId) return;
+  const rs = await getRoomState(state.roomId);
+  if (!rs) return;
+
+  const now = Date.now();
+  const phase = rs.phase;
+  const phaseEnd = rs.phaseEnd;
+
+  document.getElementById('timer-phase').textContent = phase === 'work' ? 'Trabajo' : phase === 'break' ? 'Descanso' : 'En espera';
+
+  const clockEl = document.getElementById('timer-clock');
+  const progressEl = document.getElementById('timer-progress');
+  const startBtn = document.getElementById('btn-start-work');
+  const penaltyEl = document.getElementById('penalty-notice');
+  const actionsEl = document.querySelector('.timer-actions');
+
+  clockEl.classList.remove('break', 'penalty');
+
+  if (phase === 'work' || phase === 'break') {
+    const totalMs = (phase === 'work' ? rs.workMin : rs.breakMin) * 60000;
+    const remaining = Math.max(0, phaseEnd - now);
+    const mins = Math.floor(remaining / 60000);
+    const secs = Math.floor((remaining % 60000) / 1000);
+    clockEl.textContent = String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+    if (phase === 'break') clockEl.classList.add('break');
+    const pct = Math.round((remaining / totalMs) * 100);
+    progressEl.style.width = pct + '%';
+    progressEl.className = 'progress-bar' + (phase === 'break' ? ' break' : '');
+
+    actionsEl.innerHTML = '';
+    penaltyEl.classList.remove('show');
+
+    if (remaining <= 0) {
+      if (phase === 'work') {
+        beep();
+        const newRs = { ...rs, phase: 'break', phaseEnd: now + rs.breakMin * 60000 };
+        await setRoomState(state.roomId, newRs);
+        showAlarm('¡Descanso!', '¡Buen trabajo! Tómate un respiro.');
+        await addPoints(state.userId, rs.workMin);
+        renderParticipants(newRs);
+      } else if (phase === 'break') {
+        beep();
+        const newRs = { ...rs, phase: 'penalty', phaseEnd: null, penaltyStart: now };
+        await setRoomState(state.roomId, newRs);
+        showAlarm('¡A estudiar!', 'El descanso terminó. Pulsa "Iniciar trabajo" cuando estés listo.');
+        localPenaltyStart = now;
+        localPenaltySecs = 0;
+      }
+    }
+  } else if (phase === 'penalty') {
+    if (!localPenaltyStart) localPenaltyStart = rs.penaltyStart || now;
+    const elapsed = Math.floor((now - localPenaltyStart) / 1000);
+    const newPenaltySecs = elapsed;
+    const diff = Math.floor(newPenaltySecs / 60) - Math.floor(localPenaltySecs / 60);
+    if (diff > 0) {
+      await addPoints(state.userId, -diff);
+      renderParticipants(rs);
+    }
+    localPenaltySecs = newPenaltySecs;
+    const pMins = Math.floor(elapsed / 60);
+    const pSecs = elapsed % 60;
+    clockEl.textContent = String(pMins).padStart(2,'0') + ':' + String(pSecs).padStart(2,'0');
+    clockEl.classList.add('penalty');
+    progressEl.style.width = '100%';
+    progressEl.className = 'progress-bar';
+    progressEl.style.background = '#D85A30';
+
+    if (elapsed > 0) {
+      penaltyEl.classList.add('show');
+      penaltyEl.textContent = '-1 punto por minuto de retraso · Lleva ' + pMins + ' min' + (pMins !== 1 ? 's' : '');
+    }
+    actionsEl.innerHTML = '<button class="btn-resume" onclick="startWork()"><i class="ti ti-player-play" aria-hidden="true"></i> ¡Iniciar trabajo ahora!</button>';
+  } else {
+    clockEl.textContent = String(rs.workMin).padStart(2,'0') + ':00';
+    progressEl.style.width = '100%';
+    progressEl.style.background = '';
+    progressEl.className = 'progress-bar';
+    actionsEl.innerHTML = '<button class="btn-start" onclick="startWork()"><i class="ti ti-player-play" aria-hidden="true"></i> Iniciar trabajo</button>';
+    penaltyEl.classList.remove('show');
+  }
+
+  renderParticipants(rs);
+}
+
+async function renderParticipants(rs) {
+  const pts = await getPoints();
+  const display = document.getElementById('participants-display');
+  const users = rs.users || [];
+  if (users.length === 0) return;
+  display.innerHTML = users.map(uid => {
+    const u = USERS.find(x => x.id === uid);
+    if (!u) return '';
+    const p = pts[uid] || 0;
+    const isMe = uid === state.userId;
+    return `<div class="participant-card${isMe ? ' me' : ''}">
+      <div class="avatar" style="background:${u.bg};color:${u.color};width:36px;height:36px;font-size:13px">${u.initials}</div>
+      <div class="p-info">
+        <div class="p-name">${u.name}${isMe ? ' (tú)' : ''}</div>
+        <div class="p-pts">${p} pts</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function startWork() {
+  localPenaltyStart = null;
+  localPenaltySecs = 0;
+  const rs = await getRoomState(state.roomId);
+  if (!rs) return;
+  const now = Date.now();
+  const newRs = { ...rs, phase: 'work', phaseEnd: now + rs.workMin * 60000, penaltyStart: null };
+  await setRoomState(state.roomId, newRs);
+  document.getElementById('penalty-notice').classList.remove('show');
+  document.getElementById('timer-clock').classList.remove('penalty');
+}
+
+function showAlarm(title, sub) {
+  document.getElementById('alarm-title').textContent = title;
+  document.getElementById('alarm-sub').textContent = sub;
+  document.getElementById('alarm-overlay').classList.add('show');
+}
+
+function dismissAlarm() {
+  document.getElementById('alarm-overlay').classList.remove('show');
+}
+
+async function renderLeaderboard() {
+  const pts = await getPoints();
+  const sorted = [...USERS].sort((a,b) => (pts[b.id]||0) - (pts[a.id]||0));
+  const list = document.getElementById('leaderboard-list');
+  const medals = ['🥇','🥈','🥉'];
+  list.innerHTML = sorted.map((u,i) => `
+    <div class="lb-row${u.id === state.userId ? ' me' : ''}">
+      <div class="lb-rank">${medals[i] || (i+1)}</div>
+      <div class="avatar" style="background:${u.bg};color:${u.color};width:32px;height:32px;min-width:32px;font-size:12px">${u.initials}</div>
+      <div class="lb-name">${u.name}</div>
+      <div class="lb-pts">${pts[u.id]||0} pts</div>
+    </div>`).join('');
+}
+
+renderUsers();
+</script>
